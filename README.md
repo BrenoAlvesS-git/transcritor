@@ -14,7 +14,7 @@ Aplicativo desktop de teleprompter com:
 - Python 3.10+
 - Windows/macOS/Linux (alguns recursos são específicos de Windows)
 
-## Instalação
+## Instalação (modo desenvolvimento)
 
 ```bash
 python -m venv .venv
@@ -27,6 +27,40 @@ pip install -r requirements.txt
 
 ```bash
 python main.py
+```
+
+## Gerar executável (PyInstaller)
+
+### Instalação de dependências de build
+
+```bash
+pip install -r requirements-build.txt
+```
+
+### Build automático (recomendado)
+
+```bash
+python build.py --clean
+```
+
+Saída padrão:
+- Windows (onedir): `dist/TeleprompterInvisivel/TeleprompterInvisivel.exe`
+- macOS/Linux (onedir): `dist/TeleprompterInvisivel/TeleprompterInvisivel`
+
+### Build em arquivo único
+
+```bash
+python build.py --clean --onefile
+```
+
+Saída padrão:
+- Windows: `dist/TeleprompterInvisivel.exe`
+- macOS/Linux: `dist/TeleprompterInvisivel`
+
+### Build manual com spec (alternativo)
+
+```bash
+pyinstaller --noconfirm --clean teleprompter.spec
 ```
 
 ## Hotkeys globais
@@ -43,10 +77,12 @@ python main.py
 ### Windows
 - A opção **"Excluir da captura (Windows)"** usa `SetWindowDisplayAffinity` com `WDA_EXCLUDEFROMCAPTURE`.
 - A opção **"Modo leitura click-through"** aplica também estilo Win32 (`WS_EX_TRANSPARENT`).
+- Dependendo da versão do Windows e política de segurança, exclusão de captura pode exigir janela não minimizada e Desktop Window Manager ativo.
 
 ### macOS/Linux
 - A exclusão de captura via `SetWindowDisplayAffinity` não existe.
 - O modo click-through usa `Qt.WindowTransparentForInput` (suporte depende do compositor/sistema).
+- No macOS, hotkeys globais podem exigir permissão em **Privacidade e Segurança > Acessibilidade**.
 
 ## Estrutura
 
@@ -55,4 +91,5 @@ python main.py
 - `teleprompter/hotkeys.py`: registro de hotkeys globais com `pynput`.
 - `teleprompter/os_integration.py`: integrações específicas de SO (Windows).
 - `teleprompter/app.py`: bootstrap da aplicação.
-
+- `build.py`: script para empacotar executável.
+- `teleprompter.spec`: configuração alternativa de build no PyInstaller.
