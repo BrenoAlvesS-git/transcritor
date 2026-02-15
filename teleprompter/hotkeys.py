@@ -26,13 +26,11 @@ class GlobalHotkeyManager:
         self.callbacks = callbacks
         self._listener: Optional[keyboard.Listener] = None
         self._hotkeys: Optional[keyboard.GlobalHotKeys] = None
+        self._ctrl_pressed = False
 
     def start(self) -> None:
-        # Combinações que o GlobalHotKeys trata muito bem.
+        # Mantém no GlobalHotKeys apenas atalhos sem ambiguidade de layout.
         bindings: Dict[str, Callable[[], None]] = {
-            "<ctrl>+<plus>": self.callbacks.opacity_up,
-            "<ctrl>+=": self.callbacks.opacity_up,  # Teclado ABNT/US comum.
-            "<ctrl>+<minus>": self.callbacks.opacity_down,
             "<f9>": self.callbacks.toggle_minimize,
             "<f10>": self.callbacks.next_text,
         }
@@ -40,6 +38,10 @@ class GlobalHotkeyManager:
         self._hotkeys.start()
 
         def on_press(key: keyboard.Key | keyboard.KeyCode) -> None:
+            if key in (keyboard.Key.ctrl, keyboard.Key.ctrl_l, keyboard.Key.ctrl_r):
+                self._ctrl_pressed = True
+                return
+
             if key == keyboard.Key.up:
                 self.callbacks.scroll_up()
             elif key == keyboard.Key.down:
@@ -47,7 +49,20 @@ class GlobalHotkeyManager:
             elif key == keyboard.Key.space:
                 self.callbacks.toggle_autoscroll()
 
-        self._listener = keyboard.Listener(on_press=on_press)
+            # Ctrl + '+' / '=' (teclados US/ABNT e numpad add)
+            if self._ctrl_pressed:
+                if key == keyboard.KeyCode.from_char("="):
+                    self.callbacks.opacity_up()
+                elif key == keyboard.KeyCode.from_char("+"):
+                    self.callbacks.opacity_up()
+                elif key == keyboard.KeyCode.from_char("-"):
+                    self.callbacks.opacity_down()
+
+        def on_release(key: keyboard.Key | keyboard.KeyCode) -> None:
+            if key in (keyboard.Key.ctrl, keyboard.Key.ctrl_l, keyboard.Key.ctrl_r):
+                self._ctrl_pressed = False
+
+        self._listener = keyboard.Listener(on_press=on_press, on_release=on_release)
         self._listener.start()
 
     def stop(self) -> None:
